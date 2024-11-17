@@ -3,18 +3,24 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { Card, CardContent } from "@/components/ui/card"
-import { bubbleSort, insertionSort, selectionSort, quickSort, mergeSort } from './sorting-algorithms'
+import { bubbleSort, insertionSort, selectionSort, quickSort, mergeSort } from './sorting-algorithms';
+import { useMediaQuery } from 'react-responsive';
+
 
 type SortingAlgorithm = 'bubble' | 'insertion' | 'selection' | 'quick' | 'merge'
 
 interface SortStep {
   array: number[]
   comparingIndices: number[]
+  // swappingIndices: number[]
   currentLine: number
 }
 
-const algorithmCode = {
-  bubble: `function bubbleSort(arr) {
+const algorithmInfo = {
+  bubble: {
+    name: "Bubble Sort",
+    timeComplexity: "O(n²)",
+    code: `function bubbleSort(arr) {
   const n = arr.length;
   for (let i = 0; i < n - 1; i++) {
     for (let j = 0; j < n - i - 1; j++) {
@@ -24,8 +30,12 @@ const algorithmCode = {
     }
   }
   return arr;
-}`,
-  insertion: `function insertionSort(arr) {
+}`
+  },
+  insertion: {
+    name: "Insertion Sort",
+    timeComplexity: "O(n²)",
+    code: `function insertionSort(arr) {
   const n = arr.length;
   for (let i = 1; i < n; i++) {
     let key = arr[i];
@@ -37,8 +47,12 @@ const algorithmCode = {
     arr[j + 1] = key;
   }
   return arr;
-}`,
-  selection: `function selectionSort(arr) {
+}`
+  },
+  selection: {
+    name: "Selection Sort",
+    timeComplexity: "O(n²)",
+    code: `function selectionSort(arr) {
   const n = arr.length;
   for (let i = 0; i < n - 1; i++) {
     let minIdx = i;
@@ -52,8 +66,12 @@ const algorithmCode = {
     }
   }
   return arr;
-}`,
-  quick: `function quickSort(arr, low = 0, high = arr.length - 1) {
+}`
+  },
+  quick: {
+    name: "Quick Sort",
+    timeComplexity: "O(n log n)",
+    code: `function quickSort(arr, low = 0, high = arr.length - 1) {
   if (low < high) {
     const pi = partition(arr, low, high);
     quickSort(arr, low, pi - 1);
@@ -73,8 +91,12 @@ function partition(arr, low, high) {
   }
   [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
   return i + 1;
-}`,
-  merge: `function mergeSort(arr, left = 0, right = arr.length - 1) {
+}`
+  },
+  merge: {
+    name: "Merge Sort",
+    timeComplexity: "O(n log n)",
+    code: `function mergeSort(arr, left = 0, right = arr.length - 1) {
   if (left < right) {
     const mid = Math.floor((left + right) / 2);
     mergeSort(arr, left, mid);
@@ -109,9 +131,12 @@ function merge(arr, left, mid, right) {
     k++;
   }
 }`
-}
+  }
+};
 
-export function SortingVisualizerComponent() {
+export default function SortingVisualizer() {
+  const isMobile: boolean = useMediaQuery({ query: '(max-width: 768px)' });
+
   const [array, setArray] = useState<number[]>([])
   const [sorting, setSorting] = useState(false)
   const [completed, setCompleted] = useState(false)
@@ -119,6 +144,7 @@ export function SortingVisualizerComponent() {
   const [speed, setSpeed] = useState(50)
   const [size, setSize] = useState(50)
   const [currentStep, setCurrentStep] = useState<SortStep | null>(null)
+  const [executionTime, setExecutionTime] = useState<number | null>(null)
 
   const randomIntFromInterval = (min: number, max: number) => {
     return Math.floor(Math.random() * (max - min + 1) + min)
@@ -132,6 +158,7 @@ export function SortingVisualizerComponent() {
     setArray(newArray)
     setCompleted(false)
     setCurrentStep(null)
+    setExecutionTime(null)
   }, [size])
 
   useEffect(() => {
@@ -141,7 +168,9 @@ export function SortingVisualizerComponent() {
   const runSortingAlgorithm = async () => {
     setSorting(true)
     setCompleted(false)
+    setExecutionTime(null)
 
+    const startTime = performance.now()
     let steps: SortStep[] = []
     switch (algorithm) {
       case 'bubble':
@@ -162,112 +191,162 @@ export function SortingVisualizerComponent() {
     }
 
     for (let i = 0; i < steps.length; i++) {
-      if (i === steps.length - 1) {
-        setCompleted(true)
-      }
       setCurrentStep(steps[i])
       setArray(steps[i].array)
-      await new Promise(resolve => setTimeout(resolve, 101 - speed))
+      await new Promise(resolve => setTimeout(resolve, getDelayFromSpeed(speed)))
+
+      if (i === steps.length - 1) {
+        setCompleted(true)
+        const endTime = performance.now()
+        setExecutionTime(endTime - startTime)
+      }
     }
 
     setSorting(false)
   }
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold text-center mb-8">Sorting Algorithms Visualizer</h1>
-      <div className="flex flex-wrap justify-center gap-4 mb-8">
-        <Select
-          value={algorithm}
-          onValueChange={(value: SortingAlgorithm) => setAlgorithm(value)}
-          disabled={sorting}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select algorithm" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="bubble">Bubble Sort</SelectItem>
-            <SelectItem value="insertion">Insertion Sort</SelectItem>
-            <SelectItem value="selection">Selection Sort</SelectItem>
-            <SelectItem value="quick">Quick Sort</SelectItem>
-            <SelectItem value="merge">Merge Sort</SelectItem>
-          </SelectContent>
-        </Select>
-        <div className="w-full sm:w-auto">
-          <label className="block text-sm font-medium mb-1">Array Size: {size}</label>
-          <Slider
-            min={10}
-            max={100}
-            step={1}
-            value={[size]}
-            onValueChange={([value]) => setSize(value)}
-            disabled={sorting}
-            className="w-[200px]"
-          />
-        </div>
-        <div className="w-full sm:w-auto">
-          <label className="block text-sm font-medium mb-1">Speed: {speed}</label>
-          <Slider
-            min={1}
-            max={100}
-            step={1}
-            value={[speed]}
-            onValueChange={([value]) => setSpeed(value)}
-            disabled={sorting}
-            className="w-[200px]"
-          />
-        </div>
-        <Button onClick={resetArray} disabled={sorting}>
-          Generate New Array
-        </Button>
-        <Button onClick={runSortingAlgorithm} disabled={sorting}>
-          Sort!
-        </Button>
-      </div>
-      <div className="grid md:grid-cols-2 gap-8">
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-2xl font-bold mb-4">Visualization</h2>
-            <div className="h-[400px] flex items-end justify-center">
-              {array.map((value, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    height: `${value * 3}px`,
-                    width: `${90 / size}%`,
-                  }}
-                  className={`m-[1px] ${
-                    completed
-                      ? 'bg-green-500'
-                      : currentStep?.comparingIndices.includes(idx)
-                      ? 'bg-red-500'
-                      : 'bg-blue-500'
-                  }`}
-                ></div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-2xl font-bold mb-4">Algorithm Code</h2>
-            <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto">
-              {algorithmCode[algorithm].split('\n').map((line, index) => (
-                <div
-                  key={index}
-                  className={currentStep?.currentLine === index + 1 ? 'bg-yellow-200' : ''}
-                >
-                  {line}
-                </div>
-              ))}
-            </pre>
-          </CardContent>
-        </Card>
-      </div>
+  const getDelayFromSpeed = (speed: number) => {
+    return Math.floor(100 * Math.pow(0.95, speed))
+  }
 
-      <footer className="mt-8 text-center text-gray-500">
-        Developed by Aman Verma
-      </footer>
+  return (
+    <div className="min-h-screen w-full bg-background px-4 py-8">
+      <div className="mx-auto max-w-7xl">
+        <h1 className="text-center text-2xl font-bold sm:text-3xl md:text-4xl mb-8">
+          Sorting Algorithms Visualizer
+        </h1>
+        
+        {/* Controls Section */}
+        <div className="flex flex-col gap-4 mb-8 sm:flex-row sm:flex-wrap sm:justify-center">
+          <div className="w-full sm:w-auto">
+            <Select
+              value={algorithm}
+              onValueChange={(value: SortingAlgorithm) => setAlgorithm(value)}
+              disabled={sorting}
+            >
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Select algorithm" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(algorithmInfo).map(([key, value]) => (
+                  <SelectItem key={key} value={key}>{value.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="w-full sm:w-[200px]">
+            <label className="block text-sm font-medium mb-1">Array Size: {size}</label>
+            <Slider
+              min={10}
+              max={100}
+              step={1}
+              value={[size]}
+              onValueChange={([value]) => setSize(value)}
+              disabled={sorting}
+              className="w-full"
+            />
+          </div>
+          
+          <div className="w-full sm:w-[200px]">
+            <label className="block text-sm font-medium mb-1">Speed: {speed}</label>
+            <Slider
+              min={1}
+              max={100}
+              step={1}
+              value={[speed]}
+              onValueChange={([value]) => setSpeed(value)}
+              disabled={sorting}
+              className="w-full"
+            />
+          </div>
+          
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button 
+              onClick={resetArray} 
+              disabled={sorting}
+              className="flex-1 sm:flex-none"
+            >
+              Generate New Array
+            </Button>
+            <Button 
+              onClick={runSortingAlgorithm} 
+              disabled={sorting}
+              className="flex-1 sm:flex-none"
+            >
+              Sort!
+            </Button>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="grid gap-8 lg:grid-cols-2">
+          {/* Visualization Card */}
+          <Card className="order-1 lg:order-none">
+            <CardContent className="p-4 sm:p-6">
+              <h2 className="text-xl sm:text-2xl font-bold mb-4">Visualization</h2>
+              <div className="h-[200px] sm:h-[300px] md:h-[400px] flex items-end justify-center">
+                {array.map((value, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      height: `${value * (isMobile? 2: 3)}px`,
+                      width: `${90 / size}%`,
+                    }}
+                    className={`m-[1px] ${
+                      completed
+                        ? 'bg-green-500'
+                        // : currentStep?.swappingIndices.includes(idx)
+                        // ? 'bg-yellow-500'
+                        : currentStep?.comparingIndices.includes(idx)
+                        ? 'bg-red-500'
+                        : 'bg-blue-500'
+                    }`}
+                  ></div>
+                ))}
+              </div>
+              {completed && executionTime !== null && (
+                <p className="mt-4 text-center text-sm sm:text-base">
+                  Sorting completed in {executionTime.toFixed(2)} ms
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Algorithm Code Card */}
+          <Card>
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+                <h2 className="text-xl sm:text-2xl font-bold">
+                  {algorithmInfo[algorithm].name}
+                </h2>
+                <p className="text-sm sm:text-base text-muted-foreground">
+                  Time Complexity: {algorithmInfo[algorithm].timeComplexity}
+                </p>
+              </div>
+              <div className="relative">
+                <pre className="bg-muted p-4 rounded-md overflow-x-auto text-xs sm:text-sm">
+                  {algorithmInfo[algorithm].code.split('\n').map((line, index) => (
+                    <div
+                      key={index}
+                      className={`${
+                        currentStep?.currentLine === index + 1 ? 'bg-yellow-200' : ''
+                      } ${line.trim() === '' ? 'h-4' : ''}`}
+                    >
+                      {line}
+                    </div>
+                  ))}
+                </pre>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Footer */}
+        <footer className="mt-8 text-center text-sm text-muted-foreground">
+          Developed by Aman Verma
+        </footer>
+      </div>
     </div>
   )
 }
