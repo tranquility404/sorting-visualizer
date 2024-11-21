@@ -3,21 +3,15 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { Card, CardContent } from "@/components/ui/card"
-import { bubbleSort, insertionSort, selectionSort, quickSort, mergeSort } from './sorting-algorithms';
+import { bubbleSort, insertionSort, selectionSort, quickSort, mergeSort, SortStep } from './sorting-algorithms';
 import { useMediaQuery } from 'react-responsive';
 
 
 type SortingAlgorithm = 'bubble' | 'insertion' | 'selection' | 'quick' | 'merge'
 
-interface SortStep {
-  array: number[]
-  comparingIndices: number[]
-  // swappingIndices: number[]
-  currentLine: number
-}
-
 const algorithmInfo = {
   bubble: {
+    id: 0,
     name: "Bubble Sort",
     timeComplexity: "O(n²)",
     code: `function bubbleSort(arr) {
@@ -33,6 +27,7 @@ const algorithmInfo = {
 }`
   },
   insertion: {
+    id: 1,
     name: "Insertion Sort",
     timeComplexity: "O(n²)",
     code: `function insertionSort(arr) {
@@ -50,6 +45,7 @@ const algorithmInfo = {
 }`
   },
   selection: {
+    id: 2,
     name: "Selection Sort",
     timeComplexity: "O(n²)",
     code: `function selectionSort(arr) {
@@ -69,6 +65,7 @@ const algorithmInfo = {
 }`
   },
   quick: {
+    id: 3,
     name: "Quick Sort",
     timeComplexity: "O(n log n)",
     code: `function quickSort(arr, low = 0, high = arr.length - 1) {
@@ -94,6 +91,7 @@ function partition(arr, low, high) {
 }`
   },
   merge: {
+    id: 4,
     name: "Merge Sort",
     timeComplexity: "O(n log n)",
     code: `function mergeSort(arr, left = 0, right = arr.length - 1) {
@@ -136,13 +134,13 @@ function merge(arr, left, mid, right) {
 
 export default function SortingVisualizer() {
   const isMobile: boolean = useMediaQuery({ query: '(max-width: 768px)' });
-
+  const maxSpeed = 10;
   const [array, setArray] = useState<number[]>([])
   const [sorting, setSorting] = useState(false)
   const [completed, setCompleted] = useState(false)
   const [algorithm, setAlgorithm] = useState<SortingAlgorithm>('bubble')
-  const [speed, setSpeed] = useState(50)
-  const [size, setSize] = useState(50)
+  const [speed, setSpeed] = useState(1)
+  const [size, setSize] = useState(10)
   const [currentStep, setCurrentStep] = useState<SortStep | null>(null)
   const [executionTime, setExecutionTime] = useState<number | null>(null)
 
@@ -189,6 +187,8 @@ export default function SortingVisualizer() {
         steps = mergeSort([...array])
         break
     }
+    const endTime = performance.now()
+    setExecutionTime(endTime - startTime)
 
     for (let i = 0; i < steps.length; i++) {
       setCurrentStep(steps[i])
@@ -197,8 +197,6 @@ export default function SortingVisualizer() {
 
       if (i === steps.length - 1) {
         setCompleted(true)
-        const endTime = performance.now()
-        setExecutionTime(endTime - startTime)
       }
     }
 
@@ -206,7 +204,7 @@ export default function SortingVisualizer() {
   }
 
   const getDelayFromSpeed = (speed: number) => {
-    return Math.floor(100 * Math.pow(0.95, speed))
+    return (25 * (maxSpeed - speed + 1))
   }
 
   return (
@@ -238,8 +236,8 @@ export default function SortingVisualizer() {
           <div className="w-full sm:w-[200px]">
             <label className="block text-sm font-medium mb-1">Array Size: {size}</label>
             <Slider
-              min={10}
-              max={100}
+              min={4}
+              max={30}
               step={1}
               value={[size]}
               onValueChange={([value]) => setSize(value)}
@@ -252,7 +250,7 @@ export default function SortingVisualizer() {
             <label className="block text-sm font-medium mb-1">Speed: {speed}</label>
             <Slider
               min={1}
-              max={100}
+              max={maxSpeed}
               step={1}
               value={[speed]}
               onValueChange={([value]) => setSpeed(value)}
@@ -293,16 +291,20 @@ export default function SortingVisualizer() {
                       height: `${value * (isMobile? 2: 3)}px`,
                       width: `${90 / size}%`,
                     }}
-                    className={`m-[1px] ${
-                      completed
+                    // ${(algorithmInfo[algorithm].id == 0 && currentStep?.array.length < array.length && idx > currentStep?.array.length)? 
+                    //   'bg-green-500': ''
+                    //     }
+                    className={`m-[1px] text-white flex justify-center items-center 
+                      
+                      ${completed
                         ? 'bg-green-500'
-                        // : currentStep?.swappingIndices.includes(idx)
-                        // ? 'bg-yellow-500'
                         : currentStep?.comparingIndices.includes(idx)
-                        ? 'bg-red-500'
-                        : 'bg-blue-500'
-                    }`}
-                  ></div>
+                        ? 'bg-yellow-500'
+                        : currentStep?.window.length > 0 && idx >= currentStep?.window[0] && idx <= currentStep?.window[1]? 
+                          'bg-blue-400': 'bg-blue-500'}
+                      
+                        `}
+                  >{value}</div>
                 ))}
               </div>
               {completed && executionTime !== null && (
