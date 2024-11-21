@@ -135,13 +135,14 @@ function merge(arr, left, mid, right) {
 export default function SortingVisualizer() {
   const isMobile: boolean = useMediaQuery({ query: '(max-width: 768px)' });
   const maxSpeed = 10;
+  const initStep = {array: [], comparingIndices: [], window: [], currentLine: 0};
   const [array, setArray] = useState<number[]>([])
   const [sorting, setSorting] = useState(false)
   const [completed, setCompleted] = useState(false)
   const [algorithm, setAlgorithm] = useState<SortingAlgorithm>('bubble')
   const [speed, setSpeed] = useState(1)
   const [size, setSize] = useState(10)
-  const [currentStep, setCurrentStep] = useState<SortStep | null>(null)
+  const [currentStep, setCurrentStep] = useState<SortStep>(initStep)
   const [executionTime, setExecutionTime] = useState<number | null>(null)
 
   const randomIntFromInterval = (min: number, max: number) => {
@@ -155,7 +156,7 @@ export default function SortingVisualizer() {
     }
     setArray(newArray)
     setCompleted(false)
-    setCurrentStep(null)
+    setCurrentStep(initStep)
     setExecutionTime(null)
   }, [size])
 
