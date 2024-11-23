@@ -23,6 +23,13 @@ function step(arg1: number[], arg2: number[]|number, arg3?: number|number[], arg
       window: arg3,
       currentLine: arg4 as number
     }
+  else if (Array.isArray(arg1) && Array.isArray(arg2) && Array.isArray(arg3))
+    return {
+      array: arg1,
+      comparingIndices: arg2,
+      window: arg3,
+      currentLine: arg4 as number
+    }
   else
     return {
       array: arg1,
@@ -39,7 +46,7 @@ export function bubbleSort(arr: number[]): SortStep[] {
   steps.push(step([...arr], 2 ));
   for (let i = 0; i < n - 1; i++) {
     steps.push(step([...arr], 3 ));
-    for (let j = 0; j < n - i - 1; j++) {
+    for (let j = 0; j < n-i-1; j++) {
       let window = [0, n-i-1];
       steps.push(step([...arr], [], window, 4 ));
       steps.push(step([...arr], [j, j+1], window, 5 ));
@@ -48,6 +55,7 @@ export function bubbleSort(arr: number[]): SortStep[] {
         [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
       }
       steps.push(step([...arr], [], window, 7));
+      console.log(j, j == n-i-2);
     }
     steps.push(step([...arr], 8));
   }
@@ -93,7 +101,7 @@ export function selectionSort(arr: number[]): SortStep[] {
     steps.push(step([...arr], [i], 4));
     let minIdx = i
     for (let j = i + 1; j < n; j++) {
-      let window = [i+1, n];
+      let window = [i, n];
       steps.push(step([...arr], [minIdx, j], window, 5));
       steps.push(step([...arr], [minIdx, j], window, 6));
       if (arr[j] < arr[minIdx]) {

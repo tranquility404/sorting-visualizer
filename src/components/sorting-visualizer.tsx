@@ -135,7 +135,7 @@ function merge(arr, left, mid, right) {
 export default function SortingVisualizer() {
   const isMobile: boolean = useMediaQuery({ query: '(max-width: 768px)' });
   const maxSpeed = 10;
-  const initStep = {array: [], comparingIndices: [], window: [], currentLine: 0};
+  const initStep = {array: [], comparingIndices: [], window: [], currentLine: 0, sorted: false};
   const [array, setArray] = useState<number[]>([])
   const [sorting, setSorting] = useState(false)
   const [completed, setCompleted] = useState(false)
@@ -206,6 +206,28 @@ export default function SortingVisualizer() {
 
   const getDelayFromSpeed = (speed: number) => {
     return (25 * (maxSpeed - speed + 1))
+  }
+
+  const getEleColor = (value: number, idx: number) => {
+    if (completed)
+      return 'bg-green-500';
+
+    if (currentStep.comparingIndices.includes(idx))
+      return 'bg-yellow-500';
+
+    
+    if (currentStep?.window.length > 0) {
+      console.log(algorithmInfo[algorithm].id, idx);
+      if (algorithmInfo[algorithm].id == 0 && idx > currentStep?.window[1])
+        return 'bg-green-500';
+      if (algorithmInfo[algorithm].id == 2 && idx < currentStep?.window[0])
+        return 'bg-green-500';
+
+      if (idx >= currentStep?.window[0] && idx <= currentStep?.window[1])
+        return 'bg-blue-300';
+    }
+
+    return 'bg-blue-500';
   }
 
   return (
@@ -295,16 +317,10 @@ export default function SortingVisualizer() {
                     // ${(algorithmInfo[algorithm].id == 0 && currentStep?.array.length < array.length && idx > currentStep?.array.length)? 
                     //   'bg-green-500': ''
                     //     }
-                    className={`m-[1px] text-white flex justify-center items-center 
-                      
-                      ${completed
-                        ? 'bg-green-500'
-                        : currentStep?.comparingIndices.includes(idx)
-                        ? 'bg-yellow-500'
-                        : currentStep?.window.length > 0 && idx >= currentStep?.window[0] && idx <= currentStep?.window[1]? 
-                          'bg-blue-400': 'bg-blue-500'}
-                      
-                        `}
+                    className={
+                      `m-[1px] text-white flex justify-center items-center transition-all duration-250 ease-in-out
+                      ${getEleColor(value, idx)}`
+                    }
                   >{value}</div>
                 ))}
               </div>
@@ -343,6 +359,32 @@ export default function SortingVisualizer() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        <div className='flex justify-center items-center gap-2 mt-8'>
+
+          <div>
+            <div className='w-4 h-4 mx-auto bg-green-500'></div>
+            <p>Sorted Elements</p>
+          </div>
+
+          <div>
+
+            <div className='w-4 h-4 mx-auto bg-yellow-500'></div>
+            <p>Comparing Elements</p>
+          </div>
+
+          <div>
+
+            <div className='w-4 h-4 mx-auto bg-blue-300'></div>
+            <p>Iterating window</p>
+          </div>
+          <div>
+
+            <div className='w-4 h-4 mx-auto bg-blue-500'></div>
+            <p>Unsorted Elements</p>
+          </div>
+
         </div>
 
         {/* Footer */}
