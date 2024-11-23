@@ -208,7 +208,7 @@ export default function SortingVisualizer() {
     return (25 * (maxSpeed - speed + 1))
   }
 
-  const getEleColor = (value: number, idx: number) => {
+  const getEleColor = (idx: number) => {
     if (completed)
       return 'bg-green-500';
 
@@ -319,7 +319,7 @@ export default function SortingVisualizer() {
                     //     }
                     className={
                       `m-[1px] text-white flex justify-center items-center transition-all duration-250 ease-in-out
-                      ${getEleColor(value, idx)}`
+                      ${getEleColor(idx)}`
                     }
                   >{value}</div>
                 ))}
